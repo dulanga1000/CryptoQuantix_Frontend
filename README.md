@@ -1,73 +1,115 @@
-# React + TypeScript + Vite
+# 🚀 CryptoQuantix Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern web application for **investment analysis and cryptographic validation**, built using React, TypeScript, and Tailwind CSS.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 📌 Project Overview
 
-## React Compiler
+**CryptoQuantix** is an interactive system that combines:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* 📈 **Fibonacci-based investment simulation**
+* 🔐 **Cryptographic validation using Tonelli–Shanks algorithm**
 
-## Expanding the ESLint configuration
+This frontend provides a clean and responsive UI for users to interact with mathematical models in a real-world context.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🧠 Features
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+* 📊 Investment growth simulation (Fibonacci sequence)
+* 🔐 Secure transaction validation
+* ⚡ Fast and responsive UI
+* 🎨 Modern design using Tailwind CSS
+* 🧾 Input validation and error handling
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 🛠️ Tech Stack
+
+* ⚛️ React (Vite)
+* 🟦 TypeScript
+* 🎨 Tailwind CSS
+* 🌐 REST API integration (Flask backend)
+
+---
+
+## 📂 Project Structure
+
+```
+src/
+│
+├── components/      # Reusable UI components
+├── pages/           # Main pages (Dashboard, Investment, Security)
+├── services/        # API calls
+├── utils/           # Helper functions
+├── App.tsx
+└── main.tsx
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🚀 Getting Started
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. Clone the repository
+
 ```
+git clone https://github.com/YOUR_USERNAME/cryptoquantix-frontend.git
+cd cryptoquantix-frontend
+```
+
+### 2. Install dependencies
+
+```
+npm install
+```
+
+### 3. Run the development server
+
+```
+npm run dev
+```
+
+---
+
+## 🔗 API Integration
+
+Make sure your backend (Flask) is running.
+
+Example:
+
+```
+http://localhost:5000/api/fibonacci?n=10
+http://localhost:5000/api/verify
+```
+
+---
+
+## 🌍 Deployment
+
+You can deploy the frontend using:
+
+* Vercel (recommended)
+* Netlify
+
+---
+
+## 🎯 Future Enhancements
+
+* 📈 Graph visualization (charts)
+* 🎞️ Step-by-step algorithm visualization
+* 🗄️ Database integration (MongoDB)
+* 🌙 Dark mode toggle
+
+---
+
+## 👨‍💻 Author
+
+* Your Name
+* Your Group Number
+
+---
+
+## 📄 License
+
+This project is developed for academic purposes.
