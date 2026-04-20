@@ -55,7 +55,6 @@ export default function CryptoTool() {
 
   // Verification State
   const [verifyPayload, setVerifyPayload] = useState('');
-  const [verifyHash, setVerifyHash] = useState('');
   const [verifyPubX, setVerifyPubX] = useState('');
   const [verifyPubY, setVerifyPubY] = useState('');
   const [verifySigR, setVerifySigR] = useState('');
@@ -115,8 +114,7 @@ export default function CryptoTool() {
     generateSHA256(payloadStr).then(setSignHash);
   }, [walletAddress, selectedUser, selectedAsset, quantity, customMemo, marketPrice]);
 
-  // Handle Verify Hash compilation
-  useEffect(() => { generateSHA256(verifyPayload).then(setVerifyHash); }, [verifyPayload]);
+  // Removed useEffect for setVerifyHash since setVerifyHash is deleted
 
   // --- HANDLERS ---
   const handleTonelliShanks = async (e: React.FormEvent) => {
@@ -183,7 +181,7 @@ export default function CryptoTool() {
         </div>
         <div className="flex justify-between">
           <span className="text-slate-400">Sender</span>
-          <span className="text-slate-300 truncate max-w-[150px]">{data.sender}</span>
+          <span className="text-slate-300 truncate max-w-36">{data.sender}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-slate-400">Recipient</span>
@@ -316,7 +314,7 @@ export default function CryptoTool() {
                     </div>
 
                     <div className="pt-4 border-t border-slate-100">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex justify-between">Signer Private Key <span>{keypair ? '✓ Ready' : ''}</span></label>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex justify-between">Signer Private Key <span>{keypair ? '✓ Ready' : ''}</span></label>
                       <input type="password" value={signPrivKey} onChange={(e) => setSignPrivKey(e.target.value)} required className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500 font-mono tracking-widest text-slate-500" placeholder="Paste Hex string..."/>
                     </div>
 
