@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // The base URL of your Flask backend
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const API_BASE_URL = 'https://cryptoquantix-cna0fgfga0gbcsb5.southeastasia-01.azurewebsites.net/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
