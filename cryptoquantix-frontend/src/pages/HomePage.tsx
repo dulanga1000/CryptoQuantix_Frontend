@@ -1,10 +1,20 @@
 // ...existing code...
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo-white.png';
 
 export default function HomePage() {
+  const navigate = useNavigate();
+  const handleLaunchPlatform = () => {
+    const isAuthenticated = !!localStorage.getItem('access_token');
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    } else {
+      navigate('/auth');
+    }
+  };
   return (
     // The outer wrapper is now a flex container that perfectly centers its children vertically and horizontally
-    <div className="flex flex-col items-center justify-center min-h-[85vh] w-full bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="flex flex-col items-center justify-center min-h-[85vh] w-full bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900 mt-8">
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative w-full">
         
@@ -16,12 +26,9 @@ export default function HomePage() {
 
         {/* --- Hero Section --- */}
         <div className="text-center max-w-4xl mx-auto relative z-10 flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-semibold mb-8">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-            </span>
-            System v1.0 is Live
+          {/* Logo replaces the old badge */}
+          <div className="flex items-center justify-center mb-8">
+            <img src={logo} alt="CryptoQuantix Logo" className="w-28 h-28 rounded-2xl shadow-lg shadow-blue-500/20 object-cover" />
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-8 leading-tight">
@@ -36,13 +43,14 @@ export default function HomePage() {
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link 
-              to="/auth" 
+            <button
+              type="button"
+              onClick={handleLaunchPlatform}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
             >
               Launch Platform
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-            </Link>
+            </button>
             <a 
               href="#features" 
               className="bg-white hover:bg-slate-50 text-slate-700 font-semibold py-4 px-8 rounded-xl shadow-sm border border-slate-200 transition-all flex items-center justify-center"

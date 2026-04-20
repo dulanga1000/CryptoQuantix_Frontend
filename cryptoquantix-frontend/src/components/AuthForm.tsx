@@ -25,8 +25,6 @@ export default function AuthForm() {
     const endpoint = isLogin ? '/auth/login' : '/auth/register';
 
     try {
-      // NOTE: Even though we collect Full Name and Email in the UI for a realistic UX,
-      // we only send username and password to prevent crashing your current Flask database.
       const response = await api.post(endpoint, {
         username: username,
         password: password,
@@ -37,6 +35,11 @@ export default function AuthForm() {
       if (isLogin) {
         localStorage.setItem('access_token', response.data.access_token);
         localStorage.setItem('refresh_token', response.data.refresh_token);
+        
+        // 🔥 THIS IS THE MAGIC LINE FOR YOUR NAVBAR!
+        // It saves the username they just typed in so the Navbar can display it.
+        localStorage.setItem('username', username);
+        
         navigate('/dashboard');
       } else {
         setSuccess('Account created securely! You can now log in.');
@@ -44,7 +47,6 @@ export default function AuthForm() {
         setPassword(''); 
       }
     } catch (err: any) {
-      // Safely check for either 'msg' or 'error' depending on your backend version
       const serverMsg = err.response?.data?.msg || err.response?.data?.error;
       setError(serverMsg || 'An unexpected error occurred connecting to the server.');
     } finally {
