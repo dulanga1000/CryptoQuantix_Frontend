@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import logo from '../assets/logo.png';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
@@ -19,7 +19,7 @@ export default function Navbar() {
     navigate('/');
   };
 
-  const isActive = (path: string) => location.pathname === path;
+  // Removed unused isActive function
 
   // Navigation links removed as requested
 
