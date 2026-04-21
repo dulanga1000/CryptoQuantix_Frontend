@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api'; 
 
@@ -37,7 +38,7 @@ export default function AuthForm() {
         localStorage.setItem('refresh_token', response.data.refresh_token);
         localStorage.setItem('username', username);
         
-        // 🔥 3. DISPATCH EVENT: Tells the Navbar to update instantly
+        // 🔥 DISPATCH EVENT: Tells the Navbar to update instantly
         window.dispatchEvent(new Event('auth-change'));
         
         navigate('/dashboard');
@@ -66,8 +67,8 @@ export default function AuthForm() {
         
         {/* Brand Content */}
         <div className="relative z-10 max-w-lg px-12 text-white">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-8 shadow-lg shadow-blue-500/30">
-            <span className="text-white font-bold text-2xl">C</span>
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-blue-500/30">
+            <img src={logo} alt="CryptoQuantix Logo" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-6">
             Institutional-grade analytics for the modern investor.
@@ -91,15 +92,15 @@ export default function AuthForm() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 xl:p-24 relative">
         <div className="w-full max-w-md">
           
-          {/* Mobile Logo (Visible only on small screens) */}
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">C</span>
+          {/* Mobile Logo (Visible only on small screens) - 🔥 NOW CENTERED */}
+          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+              <img src={logo} alt="CryptoQuantix Logo" className="w-7 h-7 object-contain" />
             </div>
             <span className="font-bold text-xl text-slate-900">CryptoQuantix</span>
           </div>
 
-          <div className="mb-10">
+          <div className="mb-10 text-center lg:text-left">
             <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
               {isLogin ? 'Welcome back' : 'Create your account'}
             </h2>
