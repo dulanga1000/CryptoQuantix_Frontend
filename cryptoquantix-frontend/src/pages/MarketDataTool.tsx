@@ -2,18 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import api from '../services/api';
 import { formatCurrency, formatPercent } from '../utils/formatters';
 import Sidebar from '../components/Sidebar';
-
-const POPULAR_ASSETS = [
-  { symbol: 'BTC-USD', name: 'Bitcoin', type: 'Crypto' },
-  { symbol: 'ETH-USD', name: 'Ethereum', type: 'Crypto' },
-  { symbol: 'SOL-USD', name: 'Solana', type: 'Crypto' },
-  { symbol: 'XRP-USD', name: 'XRP', type: 'Crypto' },
-  { symbol: 'DOGE-USD', name: 'Dogecoin', type: 'Crypto' },
-  { symbol: 'AAPL', name: 'Apple Inc.', type: 'Stock' },
-  { symbol: 'TSLA', name: 'Tesla Inc.', type: 'Stock' },
-  { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'Stock' },
-  { symbol: 'SPY', name: 'S&P 500 ETF', type: 'Index' },
-];
+import { MASTER_ASSETS } from '../constants/assets';
 
 export default function MarketDataTool() {
   const [symbol, setSymbol] = useState('');
@@ -59,7 +48,8 @@ export default function MarketDataTool() {
     fetchMarketPrice(cleanSymbol);
   };
 
-  const filteredAssets = POPULAR_ASSETS.filter(asset => 
+  // 🔥 UPDATED: Now filtering directly from your single source of truth
+  const filteredAssets = MASTER_ASSETS.filter(asset => 
     asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
     asset.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -96,7 +86,6 @@ export default function MarketDataTool() {
                 setIsDropdownOpen(true);
               }}
               onClick={() => {
-                // 🔥 FIXED: Clears the input and opens the full dropdown when clicked
                 setSearchQuery('');
                 setIsDropdownOpen(true);
               }}
@@ -156,7 +145,7 @@ export default function MarketDataTool() {
         </div>
       )}
 
-      {/* 🔥 NEW: Highly Detailed Market Terminal Card */}
+      {/* Highly Detailed Market Terminal Card */}
       {priceData && !loading && (
         <div className="animate-in fade-in zoom-in duration-300">
           

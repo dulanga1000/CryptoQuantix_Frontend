@@ -3,18 +3,7 @@ import api from '../services/api';
 import { formatCurrency, formatPercent } from '../utils/formatters';
 import Sidebar from '../components/Sidebar';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-
-// Realistic list of verified assets
-const POPULAR_ASSETS = [
-  { symbol: 'BTC-USD', name: 'Bitcoin', type: 'Crypto' },
-  { symbol: 'ETH-USD', name: 'Ethereum', type: 'Crypto' },
-  { symbol: 'SOL-USD', name: 'Solana', type: 'Crypto' },
-  { symbol: 'XRP-USD', name: 'XRP', type: 'Crypto' },
-  { symbol: 'AAPL', name: 'Apple Inc.', type: 'Stock' },
-  { symbol: 'TSLA', name: 'Tesla Inc.', type: 'Stock' },
-  { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'Stock' },
-  { symbol: 'SPY', name: 'S&P 500 ETF', type: 'Index' },
-];
+import { MASTER_ASSETS } from '../constants/assets'; // 🔥 Imported the Master List
 
 const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4'];
 
@@ -259,7 +248,7 @@ export default function PortfolioPage() {
               <h3 className="text-lg font-bold text-slate-900 mb-6">Record Transaction</h3>
               <form onSubmit={handleAddTrade} className="space-y-5">
                 
-                {/* 🔥 Realistic Dropdown Component */}
+                {/* 🔥 Dropdown now using MASTER_ASSETS */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1.5">Select Asset</label>
                   <div className="relative">
@@ -270,7 +259,7 @@ export default function PortfolioPage() {
                       className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none font-medium text-slate-900"
                     >
                       <option value="" disabled>Choose ticker...</option>
-                      {POPULAR_ASSETS.map(asset => (
+                      {MASTER_ASSETS.map(asset => (
                         <option key={asset.symbol} value={asset.symbol}>
                           {asset.symbol} - {asset.name}
                         </option>

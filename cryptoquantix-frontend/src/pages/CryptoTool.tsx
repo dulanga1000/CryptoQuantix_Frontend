@@ -2,13 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Sidebar from '../components/Sidebar';
 import { formatCurrency } from '../utils/formatters';
-
-const POPULAR_ASSETS = [
-  { symbol: 'BTC-USD', name: 'Bitcoin' },
-  { symbol: 'ETH-USD', name: 'Ethereum' },
-  { symbol: 'SOL-USD', name: 'Solana' },
-  { symbol: 'USDC-USD', name: 'USD Coin' }
-];
+import { MASTER_ASSETS } from '../constants/assets'; // 🔥 Imported the Master List
 
 const generateSHA256 = async (text: string) => {
   if (!text) return '';
@@ -113,8 +107,6 @@ export default function CryptoTool() {
     setParsedPayloadObj(payloadObj);
     generateSHA256(payloadStr).then(setSignHash);
   }, [walletAddress, selectedUser, selectedAsset, quantity, customMemo, marketPrice]);
-
-  // Removed useEffect for setVerifyHash since setVerifyHash is deleted
 
   // --- HANDLERS ---
   const handleTonelliShanks = async (e: React.FormEvent) => {
@@ -299,7 +291,10 @@ export default function CryptoTool() {
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Asset</label>
                         <select value={selectedAsset} onChange={e => setSelectedAsset(e.target.value)} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500 font-bold text-slate-900">
-                          {POPULAR_ASSETS.map(asset => <option key={asset.symbol} value={asset.symbol}>{asset.symbol}</option>)}
+                          {/* 🔥 Filters the Master list to only show Crypto assets in the simulator */}
+                          {MASTER_ASSETS.filter(asset => asset.type === 'Crypto').map(asset => (
+                            <option key={asset.symbol} value={asset.symbol}>{asset.symbol}</option>
+                          ))}
                         </select>
                       </div>
                       <div>

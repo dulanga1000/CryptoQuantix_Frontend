@@ -2,16 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { formatCurrency } from '../utils/formatters';
 import Sidebar from '../components/Sidebar';
-
-// Realistic list of assets for the scanner
-const ASSETS = [
-  { symbol: 'BTC-USD', name: 'Bitcoin' },
-  { symbol: 'ETH-USD', name: 'Ethereum' },
-  { symbol: 'SOL-USD', name: 'Solana' },
-  { symbol: 'AAPL', name: 'Apple Inc.' },
-  { symbol: 'TSLA', name: 'Tesla Inc.' },
-  { symbol: 'SPY', name: 'S&P 500 ETF' },
-];
+import { MASTER_ASSETS } from '../constants/assets'; // 🔥 Imported the central list
 
 export default function InvestmentTool() {
   // State for Market Scanner & Trading Signals
@@ -135,7 +126,7 @@ export default function InvestmentTool() {
               </div>
               
               <div className="p-6 flex-1">
-                {/* Modern Dropdown Selector */}
+                {/* Modern Dropdown Selector - 🔥 Now using MASTER_ASSETS */}
                 <div className="mb-8">
                   <label className="block text-sm font-bold text-slate-700 mb-2">Select Asset to Analyze</label>
                   <div className="relative">
@@ -145,7 +136,7 @@ export default function InvestmentTool() {
                       className="w-full pl-4 pr-10 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none font-bold text-slate-900 shadow-sm transition-all"
                     >
                       <option value="" disabled>Choose a market ticker...</option>
-                      {ASSETS.map(asset => (
+                      {MASTER_ASSETS.map(asset => (
                         <option key={asset.symbol} value={asset.symbol}>
                           {asset.symbol} - {asset.name}
                         </option>
@@ -215,7 +206,7 @@ export default function InvestmentTool() {
               )}
             </div>
 
-            {/* --- SECTION 2: SYSTEM DIAGNOSTICS (Removed Q1 academic text) --- */}
+            {/* --- SECTION 2: SYSTEM DIAGNOSTICS --- */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-fit">
               <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <h2 className="text-lg font-bold text-slate-800">Computational Diagnostics</h2>
