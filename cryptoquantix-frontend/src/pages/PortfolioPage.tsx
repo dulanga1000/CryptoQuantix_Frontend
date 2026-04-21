@@ -14,6 +14,7 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   
+  // Form State
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL' | 'SWAP'>('BUY'); 
   const [symbol, setSymbol] = useState('');
   const [toSymbol, setToSymbol] = useState(''); 
@@ -23,12 +24,17 @@ export default function PortfolioPage() {
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [liveToPrice, setLiveToPrice] = useState<number | null>(null); 
 
+  // 🔥 NEW STATE: Holds the full transaction history and controls the Modal
+  const [tradeHistory, setTradeHistory] = useState<any[]>([]);
+  const [historyModalFilter, setHistoryModalFilter] = useState<'BUY' | 'SELL' | 'SWAP' | null>(null);
+
   const fetchData = async () => {
     try {
       const response = await api.get('/analytics/portfolio');
       setPortfolio(response.data);
       setUsdBalance(response.data.usd_balance || 0); 
       setCryptoAssets(response.data.assets || []);
+      setTradeHistory(response.data.history || []); // Catch the new history data
     } catch (err) {
       console.error("Fetch Error:", err);
     } finally {
@@ -130,6 +136,52 @@ export default function PortfolioPage() {
   return (
     <div className="flex w-full min-h-[calc(100vh-64px)] bg-slate-50 font-sans">
       <Sidebar />
+      
+      {/* 🔥 THE TRANSACTION HISTORY MODAL 🔥 */}
+      {historyModalFilter && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95">
+            <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                {historyModalFilter === 'BUY' ? '📈 Buy History' : historyModalFilter === 'SELL' ? '📉 Sell History' : '🔄 Swap History'}
+              </h3>
+              <button onClick={() => setHistoryModalFilter(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-white sticky top-0 shadow-sm">
+                  <tr>
+                    <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Asset</th>
+                    <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Quantity</th>
+                    <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Total Value</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {tradeHistory.filter(t => t.action === historyModalFilter).length === 0 ? (
+                    <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-500 font-medium">No {historyModalFilter.toLowerCase()} transactions found.</td></tr>
+                  ) : (
+                    tradeHistory.filter(t => t.action === historyModalFilter).map((trade, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 text-sm text-slate-500 font-medium">{trade.timestamp}</td>
+                        <td className="px-6 py-4 font-bold text-slate-900">{trade.symbol}</td>
+                        <td className="px-6 py-4 text-sm font-bold text-slate-700 text-right">{Math.abs(trade.quantity)}</td>
+                        <td className="px-6 py-4 text-sm font-bold text-slate-700 text-right">{formatCurrency(trade.total_value)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 text-right">
+              <button onClick={() => setHistoryModalFilter(null)} className="px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl transition-colors">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 w-full">
           
@@ -164,17 +216,17 @@ export default function PortfolioPage() {
             </div>
           </div>
 
-          {/* 🔥 NEW: Trading Activity Breakdown */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-xl text-sm font-bold">
+          {/* 🔥 CLICKABLE PILLS FOR TRANSACTION HISTORY */}
+          <div className="flex flex-wrap gap-4 mb-8 select-none">
+            <div onClick={() => setHistoryModalFilter('BUY')} className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-xl text-sm font-bold cursor-pointer hover:scale-105 hover:shadow-sm transition-all">
               <span>📈 Total Buys:</span>
               <span className="text-lg">{portfolio?.buy_count || 0}</span>
             </div>
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm font-bold">
+            <div onClick={() => setHistoryModalFilter('SELL')} className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm font-bold cursor-pointer hover:scale-105 hover:shadow-sm transition-all">
               <span>📉 Total Sells:</span>
               <span className="text-lg">{portfolio?.sell_count || 0}</span>
             </div>
-            <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold">
+            <div onClick={() => setHistoryModalFilter('SWAP')} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold cursor-pointer hover:scale-105 hover:shadow-sm transition-all">
               <span>🔄 Total Swaps:</span>
               <span className="text-lg">{portfolio?.swap_count || 0}</span>
             </div>
