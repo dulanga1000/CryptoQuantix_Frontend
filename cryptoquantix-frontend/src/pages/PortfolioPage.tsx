@@ -3,12 +3,15 @@ import api from '../services/api';
 import { formatCurrency, formatPercent } from '../utils/formatters';
 import Sidebar from '../components/Sidebar';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { MASTER_ASSETS } from '../constants/assets'; // 🔥 Imported the Master List
+import { MASTER_ASSETS } from '../constants/assets'; 
 
 const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4'];
 
 export default function PortfolioPage() {
   const [portfolio, setPortfolio] = useState<any>(null);
+  const [cryptoAssets, setCryptoAssets] = useState<any[]>([]);
+  const [usdBalance, setUsdBalance] = useState<number>(0); // 🔥 Tracks purchasing power
+  
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   
@@ -16,8 +19,6 @@ export default function PortfolioPage() {
   const [symbol, setSymbol] = useState('');
   const [quantity, setQuantity] = useState('');
   const [buyPrice, setBuyPrice] = useState('');
-  
-  // Realistic Feature: Live Price Fetching for the form
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [fetchingLivePrice, setFetchingLivePrice] = useState(false);
 
@@ -25,6 +26,14 @@ export default function PortfolioPage() {
     try {
       const response = await api.get('/analytics/portfolio');
       setPortfolio(response.data);
+      
+      // 🔥 Separate USD Cash from actual Crypto Investments
+      const usd = response.data.assets.find((a: any) => a.symbol === 'USD');
+      setUsdBalance(usd ? usd.quantity : 0);
+      
+      const cryptos = response.data.assets.filter((a: any) => a.symbol !== 'USD' && a.quantity > 0);
+      setCryptoAssets(cryptos);
+
     } catch (err) {
       console.error("Fetch Error:", err);
     } finally {
@@ -36,7 +45,6 @@ export default function PortfolioPage() {
     fetchData();
   }, []);
 
-  // Fetch live price when a user selects a symbol in the dropdown
   useEffect(() => {
     if (!symbol) {
       setLivePrice(null);
@@ -56,24 +64,22 @@ export default function PortfolioPage() {
     fetchCurrentPrice();
   }, [symbol]);
 
+  // 🔥 LIVE COST CALCULATION
+  const totalCost = (parseFloat(quantity) || 0) * (parseFloat(buyPrice) || 0);
+  const isInsufficientFunds = totalCost > usdBalance;
+
   const handleAddTrade = async (e: React.FormEvent) => {
     e.preventDefault();
-    const numQty = parseFloat(quantity);
-    const numPrice = parseFloat(buyPrice);
-
-    if (!symbol || isNaN(numQty) || isNaN(numPrice)) {
-      alert("Please enter a valid symbol, quantity, and price.");
-      return;
-    }
+    if (isInsufficientFunds) return;
 
     try {
       await api.post('/analytics/portfolio/trade', {
         symbol: symbol.toUpperCase().trim(),
-        quantity: numQty,
-        buy_price: numPrice
+        quantity: parseFloat(quantity),
+        buy_price: parseFloat(buyPrice)
       });
       setSymbol(''); setQuantity(''); setBuyPrice(''); setLivePrice(null);
-      fetchData(); 
+      fetchData(); // Refresh ledger instantly
     } catch (err: any) {
       alert(err.response?.data?.msg || "Trade failed.");
     }
@@ -99,10 +105,10 @@ export default function PortfolioPage() {
     }
   };
 
-  const chartData = portfolio?.assets?.map((asset: any) => ({
+  const chartData = cryptoAssets.map((asset: any) => ({
     name: asset.symbol,
     value: asset.quantity * asset.current_price
-  })) || [];
+  }));
 
   if (loading) {
     return (
@@ -111,7 +117,7 @@ export default function PortfolioPage() {
         <main className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 animate-pulse">
             <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-            <p className="text-slate-500 font-medium">Loading Portfolio Data...</p>
+            <p className="text-slate-500 font-medium">Loading Portfolio Ledger...</p>
           </div>
         </main>
       </div>
@@ -124,44 +130,38 @@ export default function PortfolioPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 w-full">
           
-          {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Portfolio Overview</h1>
-              <p className="text-slate-500 mt-1">Manage your holdings and track performance.</p>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Portfolio Ledger</h1>
+              <p className="text-slate-500 mt-1">Manage your holdings and track network performance.</p>
             </div>
             <button 
               onClick={handleDownloadReport} 
               disabled={downloading}
               className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm font-bold py-2.5 px-6 rounded-xl transition-all flex items-center gap-2 disabled:opacity-50"
             >
-              {downloading ? (
-                <span className="flex items-center gap-2">⏳ Generating PDF...</span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                  Export Report
-                </span>
-              )}
+              {downloading ? '⏳ Generating PDF...' : 'Export Report'}
             </button>
           </div>
 
-          {/* Premium Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10"><svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
-              <p className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-1">Total Capital</p>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {/* 🔥 NEW: Available Cash Display */}
+            <div className="bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-800 text-white">
+              <p className="text-sm text-slate-400 font-bold uppercase tracking-wider mb-1">Purchasing Power</p>
+              <p className="text-3xl font-extrabold text-emerald-400">{formatCurrency(usdBalance)}</p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <p className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-1">Total Invested</p>
               <p className="text-3xl font-extrabold text-slate-900">{formatCurrency(portfolio?.total_invested || 0)}</p>
             </div>
             
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10 text-blue-600"><svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg></div>
-              <p className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-1">Current Value</p>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <p className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-1">Crypto Value</p>
               <p className="text-3xl font-extrabold text-blue-600">{formatCurrency(portfolio?.total_value || 0)}</p>
             </div>
             
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10 text-emerald-600"><svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
               <p className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-1">Net P&L</p>
               <p className={`text-3xl font-extrabold ${portfolio?.overall_p_l >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                 {portfolio?.overall_p_l > 0 ? '+' : ''}{formatCurrency(portfolio?.overall_p_l || 0)}
@@ -169,8 +169,7 @@ export default function PortfolioPage() {
             </div>
           </div>
 
-          {/* Asset Allocation Chart */}
-          {portfolio?.assets?.length > 0 && (
+          {cryptoAssets.length > 0 && (
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-col items-center">
               <h3 className="text-lg font-bold text-slate-900 w-full text-left mb-2">Asset Allocation</h3>
               <div className="w-full h-72">
@@ -189,13 +188,10 @@ export default function PortfolioPage() {
             </div>
           )}
 
-          {/* Tables and Forms Grid */}
           <div className="grid lg:grid-cols-3 gap-8">
-            
-            {/* Holdings Table */}
             <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
-                <h3 className="text-lg font-bold text-slate-900">Current Holdings</h3>
+                <h3 className="text-lg font-bold text-slate-900">Crypto Holdings</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -208,13 +204,13 @@ export default function PortfolioPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {portfolio?.assets.map((asset: any) => {
+                    {cryptoAssets.map((asset: any) => {
                       const isProfit = asset.p_l >= 0;
                       return (
                         <tr key={asset.id} className="hover:bg-slate-50 transition-colors group">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
                                 {asset.symbol.charAt(0)}
                               </div>
                               <span className="font-bold text-slate-900">{asset.symbol}</span>
@@ -227,16 +223,13 @@ export default function PortfolioPage() {
                               <span className={`font-bold ${isProfit ? 'text-emerald-600' : 'text-red-600'}`}>
                                 {isProfit ? '+' : ''}{formatCurrency(asset.p_l)}
                               </span>
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full mt-1 ${isProfit ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                                {formatPercent(asset.p_l_percent / 100)}
-                              </span>
                             </div>
                           </td>
                         </tr>
                       );
                     })}
-                    {portfolio?.assets?.length === 0 && (
-                      <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-500">No open positions in your portfolio.</td></tr>
+                    {cryptoAssets.length === 0 && (
+                      <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-500">No crypto assets held.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -245,56 +238,42 @@ export default function PortfolioPage() {
 
             {/* Smart Add Trade Form */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
-              <h3 className="text-lg font-bold text-slate-900 mb-6">Record Transaction</h3>
+              <h3 className="text-lg font-bold text-slate-900 mb-6">Execute Trade</h3>
               <form onSubmit={handleAddTrade} className="space-y-5">
                 
-                {/* 🔥 Dropdown now using MASTER_ASSETS */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1.5">Select Asset</label>
-                  <div className="relative">
-                    <select
-                      value={symbol}
-                      onChange={(e) => setSymbol(e.target.value)}
-                      required
-                      className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none font-medium text-slate-900"
-                    >
-                      <option value="" disabled>Choose ticker...</option>
-                      {MASTER_ASSETS.map(asset => (
-                        <option key={asset.symbol} value={asset.symbol}>
-                          {asset.symbol} - {asset.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                  </div>
+                  <select value={symbol} onChange={(e) => setSymbol(e.target.value)} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-900">
+                    <option value="" disabled>Choose ticker...</option>
+                    {MASTER_ASSETS.map(asset => (
+                      <option key={asset.symbol} value={asset.symbol}>{asset.symbol} - {asset.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1.5">Quantity</label>
-                  <input type="number" step="any" placeholder="e.g., 0.5" value={quantity} onChange={e => setQuantity(e.target.value)} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-900"/>
+                  <input type="number" step="any" value={quantity} onChange={e => setQuantity(e.target.value)} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-900"/>
                 </div>
 
                 <div>
                   <div className="flex justify-between items-end mb-1.5">
                     <label className="block text-sm font-bold text-slate-700">Buy Price (USD)</label>
-                    {/* Live Price Helper */}
-                    {symbol && (
-                      <div className="text-xs text-slate-500 font-medium">
-                        {fetchingLivePrice ? 'Fetching live price...' : livePrice ? (
-                          <button type="button" onClick={() => setBuyPrice(livePrice.toString())} className="text-blue-600 hover:text-blue-800 transition-colors">
-                            Use Current: {formatCurrency(livePrice)}
-                          </button>
-                        ) : null}
-                      </div>
+                    {symbol && livePrice && (
+                      <button type="button" onClick={() => setBuyPrice(livePrice.toString())} className="text-xs text-blue-600 font-medium">Use Current: {formatCurrency(livePrice)}</button>
                     )}
                   </div>
-                  <input type="number" step="any" placeholder="0.00" value={buyPrice} onChange={e => setBuyPrice(e.target.value)} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-900"/>
+                  <input type="number" step="any" value={buyPrice} onChange={e => setBuyPrice(e.target.value)} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-900"/>
                 </div>
 
-                <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-slate-900/20 mt-2">
-                  Add to Portfolio
+                {/* 🔥 LIVE COST DISPLAY */}
+                <div className={`p-3 rounded-xl border text-sm font-bold flex justify-between items-center ${isInsufficientFunds ? 'bg-red-50 border-red-200 text-red-700' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
+                  <span>Total Cost:</span>
+                  <span>{formatCurrency(totalCost)}</span>
+                </div>
+
+                <button type="submit" disabled={isInsufficientFunds || !symbol || !quantity || !buyPrice} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 mt-2">
+                  {isInsufficientFunds ? 'Insufficient USD Balance' : 'Confirm Purchase'}
                 </button>
               </form>
             </div>
