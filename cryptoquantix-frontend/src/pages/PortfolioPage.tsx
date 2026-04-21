@@ -14,10 +14,9 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   
-  // Form State
-  const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL' | 'SWAP'>('BUY'); // 🔥 3-Way Mode Switcher
+  const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL' | 'SWAP'>('BUY'); 
   const [symbol, setSymbol] = useState('');
-  const [toSymbol, setToSymbol] = useState(''); // Target asset for Swap
+  const [toSymbol, setToSymbol] = useState(''); 
   const [quantity, setQuantity] = useState('');
   const [buyPrice, setBuyPrice] = useState('');
   
@@ -41,19 +40,16 @@ export default function PortfolioPage() {
     fetchData();
   }, []);
 
-  // Fetch Live Price for Primary Asset
   useEffect(() => {
     if (!symbol) { setLivePrice(null); return; }
     api.get(`/market/price/${symbol}`).then(res => setLivePrice(res.data.price)).catch(() => setLivePrice(null));
   }, [symbol]);
 
-  // Fetch Live Price for Destination Asset (Swap Mode Only)
   useEffect(() => {
     if (tradeSide !== 'SWAP' || !toSymbol) { setLiveToPrice(null); return; }
     api.get(`/market/price/${toSymbol}`).then(res => setLiveToPrice(res.data.price)).catch(() => setLiveToPrice(null));
   }, [toSymbol, tradeSide]);
 
-  // 🔥 MATH & VALIDATION LOGIC
   const totalCostOrRevenue = (parseFloat(quantity) || 0) * (parseFloat(buyPrice) || 0);
   const swapEstimatedReceive = (parseFloat(quantity) || 0) * (livePrice || 0) / (liveToPrice || 1);
   const currentAssetHolding = cryptoAssets.find(a => a.symbol === symbol)?.quantity || 0;
@@ -64,7 +60,7 @@ export default function PortfolioPage() {
   let disableSubmit = false;
   if (tradeSide === 'BUY' || tradeSide === 'SELL') {
     disableSubmit = isInsufficientUSD || isInsufficientCrypto || !symbol || !quantity || !buyPrice;
-  } else { // SWAP
+  } else { 
     disableSubmit = isInsufficientCrypto || !symbol || !toSymbol || !quantity || symbol === toSymbol;
   }
 
@@ -88,7 +84,6 @@ export default function PortfolioPage() {
         });
       }
       
-      // Reset Form and Refresh Ledger
       setSymbol(''); setQuantity(''); setBuyPrice(''); setToSymbol(''); setLivePrice(null); setLiveToPrice(null);
       fetchData(); 
     } catch (err: any) {
@@ -148,7 +143,7 @@ export default function PortfolioPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div className="bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-800 text-white">
               <p className="text-sm text-slate-400 font-bold uppercase tracking-wider mb-1">Purchasing Power (USD)</p>
               <p className="text-3xl font-extrabold text-emerald-400">{formatCurrency(usdBalance)}</p>
@@ -166,6 +161,22 @@ export default function PortfolioPage() {
               <p className={`text-3xl font-extrabold ${portfolio?.overall_p_l >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                 {portfolio?.overall_p_l > 0 ? '+' : ''}{formatCurrency(portfolio?.overall_p_l || 0)}
               </p>
+            </div>
+          </div>
+
+          {/* 🔥 NEW: Trading Activity Breakdown */}
+          <div className="flex flex-wrap gap-4 mb-8">
+            <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-xl text-sm font-bold">
+              <span>📈 Total Buys:</span>
+              <span className="text-lg">{portfolio?.buy_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm font-bold">
+              <span>📉 Total Sells:</span>
+              <span className="text-lg">{portfolio?.sell_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold">
+              <span>🔄 Total Swaps:</span>
+              <span className="text-lg">{portfolio?.swap_count || 0}</span>
             </div>
           </div>
 
@@ -239,11 +250,9 @@ export default function PortfolioPage() {
               </div>
             </div>
 
-            {/* Smart Add Trade Form with Buy/Sell/Swap Toggle */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
               <h3 className="text-lg font-bold text-slate-900 mb-4">Trading Terminal</h3>
               
-              {/* 🔥 The 3-Way Mode Switcher */}
               <div className="flex bg-slate-100 p-1 rounded-lg mb-6">
                 <button type="button" onClick={() => setTradeSide('BUY')} className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${tradeSide === 'BUY' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Buy</button>
                 <button type="button" onClick={() => setTradeSide('SELL')} className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${tradeSide === 'SELL' ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Sell</button>
@@ -251,8 +260,6 @@ export default function PortfolioPage() {
               </div>
 
               <form onSubmit={handleAddTrade} className="space-y-5">
-                
-                {/* Primary Asset Selection */}
                 <div>
                   <div className="flex justify-between items-end mb-1.5">
                     <label className="block text-sm font-bold text-slate-700">{tradeSide === 'SWAP' ? 'From Asset' : 'Select Asset'}</label>
@@ -268,7 +275,6 @@ export default function PortfolioPage() {
                   </select>
                 </div>
 
-                {/* Secondary Asset Selection (Swap Only) */}
                 {tradeSide === 'SWAP' && (
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1.5">To Asset</label>
@@ -286,7 +292,6 @@ export default function PortfolioPage() {
                   <input type="number" step="any" value={quantity} onChange={e => setQuantity(e.target.value)} required className={`w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none font-medium text-slate-900 ${isInsufficientCrypto ? 'border-red-400 focus:ring-red-500 bg-red-50' : 'border-slate-200 focus:ring-blue-500'}`}/>
                 </div>
 
-                {/* Buy/Sell Price (Hidden on Swap) */}
                 {tradeSide !== 'SWAP' && (
                   <div>
                     <div className="flex justify-between items-end mb-1.5">
@@ -299,7 +304,6 @@ export default function PortfolioPage() {
                   </div>
                 )}
 
-                {/* 🔥 DYNAMIC LEDGER PREVIEW */}
                 {tradeSide === 'SWAP' ? (
                   <div className={`p-3 rounded-xl border text-sm font-bold flex justify-between items-center ${isInsufficientCrypto ? 'bg-red-50 border-red-200 text-red-700' : 'bg-indigo-50 border-indigo-200 text-indigo-700'}`}>
                     <span>Est. Receive:</span>
