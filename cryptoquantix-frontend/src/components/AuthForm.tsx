@@ -35,10 +35,10 @@ export default function AuthForm() {
       if (isLogin) {
         localStorage.setItem('access_token', response.data.access_token);
         localStorage.setItem('refresh_token', response.data.refresh_token);
-        
-        // 🔥 THIS IS THE MAGIC LINE FOR YOUR NAVBAR!
-        // It saves the username they just typed in so the Navbar can display it.
         localStorage.setItem('username', username);
+        
+        // 🔥 3. DISPATCH EVENT: Tells the Navbar to update instantly
+        window.dispatchEvent(new Event('auth-change'));
         
         navigate('/dashboard');
       } else {

@@ -1,12 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo.png';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isAuthenticated = !!localStorage.getItem('access_token');
-  const username = localStorage.getItem('username') || 'User';
+  // 🔥 1. Converted to React State so the component knows when to redraw
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('access_token'));
+  const [username, setUsername] = useState(localStorage.getItem('username') || 'User');
+
+  // 🔥 2. Added Event Listener to instantly catch login/logout events
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setIsAuthenticated(!!localStorage.getItem('access_token'));
+      setUsername(localStorage.getItem('username') || 'User');
+    };
+
+    window.addEventListener('auth-change', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('auth-change', handleAuthChange);
+    };
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[#030303]/70 backdrop-blur-xl saturate-150 transition-all duration-500">

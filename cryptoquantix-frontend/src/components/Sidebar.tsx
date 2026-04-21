@@ -1,10 +1,9 @@
-// ...existing code...
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // 🔥 Added useNavigate
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate(); // 🔥 Initialize the navigation hook
 
-  // Renamed professionally and removed academic tags
   const navItems = [
     { 
       name: 'Dashboard', 
@@ -62,14 +61,20 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* Logout Button at bottom */}
+        {/* 🔥 THE REAL-TIME LOGOUT BUTTON */}
         <button
           className="mt-auto w-full px-3 py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl border border-red-700/50 font-semibold flex items-center justify-center gap-2 transition-colors"
           onClick={() => {
-            // Simple logout: clear localStorage/session and redirect
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = '/auth';
+            // 1. Clear the authentication data
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('username');
+            
+            // 2. 🔥 Fire the event so the Navbar updates instantly!
+            window.dispatchEvent(new Event('auth-change'));
+            
+            // 3. 🔥 Route to the auth page WITHOUT refreshing the browser
+            navigate('/auth');
           }}
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" /></svg>
