@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { formatCurrency, formatPercent } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters'; // 🔥 Removed formatPercent
 import Sidebar from '../components/Sidebar';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { MASTER_ASSETS } from '../constants/assets'; 
@@ -10,7 +10,7 @@ const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 export default function PortfolioPage() {
   const [portfolio, setPortfolio] = useState<any>(null);
   const [cryptoAssets, setCryptoAssets] = useState<any[]>([]);
-  const [usdBalance, setUsdBalance] = useState<number>(0); // 🔥 Tracks purchasing power
+  const [usdBalance, setUsdBalance] = useState<number>(0);
   
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
@@ -20,14 +20,13 @@ export default function PortfolioPage() {
   const [quantity, setQuantity] = useState('');
   const [buyPrice, setBuyPrice] = useState('');
   const [livePrice, setLivePrice] = useState<number | null>(null);
-  const [fetchingLivePrice, setFetchingLivePrice] = useState(false);
+  // 🔥 Removed fetchingLivePrice state
 
   const fetchData = async () => {
     try {
       const response = await api.get('/analytics/portfolio');
       setPortfolio(response.data);
       
-      // 🔥 Separate USD Cash from actual Crypto Investments
       const usd = response.data.assets.find((a: any) => a.symbol === 'USD');
       setUsdBalance(usd ? usd.quantity : 0);
       
@@ -51,20 +50,16 @@ export default function PortfolioPage() {
       return;
     }
     const fetchCurrentPrice = async () => {
-      setFetchingLivePrice(true);
       try {
         const res = await api.get(`/market/price/${symbol}`);
         setLivePrice(res.data.price);
       } catch (err) {
         setLivePrice(null);
-      } finally {
-        setFetchingLivePrice(false);
       }
     };
     fetchCurrentPrice();
   }, [symbol]);
 
-  // 🔥 LIVE COST CALCULATION
   const totalCost = (parseFloat(quantity) || 0) * (parseFloat(buyPrice) || 0);
   const isInsufficientFunds = totalCost > usdBalance;
 
@@ -79,7 +74,7 @@ export default function PortfolioPage() {
         buy_price: parseFloat(buyPrice)
       });
       setSymbol(''); setQuantity(''); setBuyPrice(''); setLivePrice(null);
-      fetchData(); // Refresh ledger instantly
+      fetchData(); 
     } catch (err: any) {
       alert(err.response?.data?.msg || "Trade failed.");
     }
@@ -145,7 +140,6 @@ export default function PortfolioPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {/* 🔥 NEW: Available Cash Display */}
             <div className="bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-800 text-white">
               <p className="text-sm text-slate-400 font-bold uppercase tracking-wider mb-1">Purchasing Power</p>
               <p className="text-3xl font-extrabold text-emerald-400">{formatCurrency(usdBalance)}</p>

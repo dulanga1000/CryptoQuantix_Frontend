@@ -21,9 +21,9 @@ export default function CryptoTool() {
 
   const [networkUsers, setNetworkUsers] = useState<any[]>([]);
   const [marketPrice, setMarketPrice] = useState<number>(0);
-  const [fetchingPrice, setFetchingPrice] = useState(false);
+  
+  // 🔥 Removed fetchingPrice state
 
-  // 🔥 STATE: Holds the user's actual database balances
   const [myBalances, setMyBalances] = useState<Record<string, number>>({});
 
   const [keypair, setKeypair] = useState<any>(null);
@@ -33,7 +33,8 @@ export default function CryptoTool() {
   const [selectedUser, setSelectedUser] = useState('');
   const [selectedAsset, setSelectedAsset] = useState('BTC-USD');
   const [quantity, setQuantity] = useState<number | ''>('');
-  const [customMemo, setCustomMemo] = useState('');
+  
+  // 🔥 Removed customMemo state
   
   const [compiledPayload, setCompiledPayload] = useState('');
   const [parsedPayloadObj, setParsedPayloadObj] = useState<any>(null);
@@ -51,14 +52,12 @@ export default function CryptoTool() {
   const [verifyResult, setVerifyResult] = useState<any>(null);
   const [verifyLoading, setVerifyLoading] = useState(false);
 
-  // Fetch Users & Actual Portfolio Balances on Load
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         const usersRes = await api.get('/auth/users');
         setNetworkUsers(usersRes.data);
 
-        // 🔥 Fetch real balances from the ledger
         const portfolioRes = await api.get('/analytics/portfolio');
         const balancesMap: Record<string, number> = {};
         portfolioRes.data.assets.forEach((asset: any) => {
@@ -74,12 +73,10 @@ export default function CryptoTool() {
   useEffect(() => {
     const fetchPrice = async () => {
       if (!selectedAsset) return;
-      setFetchingPrice(true);
       try {
         const res = await api.get(`/market/price/${selectedAsset}`);
         setMarketPrice(res.data.price);
       } catch (err) { setMarketPrice(0); }
-      finally { setFetchingPrice(false); }
     };
     fetchPrice();
   }, [selectedAsset]);
@@ -100,14 +97,14 @@ export default function CryptoTool() {
       asset_ticker: selectedAsset,
       amount_units: Number(quantity) || 0,
       fiat_value_usd: parseFloat(((Number(quantity) || 0) * marketPrice).toFixed(2)),
-      memo_data: customMemo || "Standard Transfer"
+      memo_data: "Standard Transfer" // 🔥 Hardcoded to remove the unused variable
     };
     
     const payloadStr = JSON.stringify(payloadObj);
     setCompiledPayload(payloadStr);
     setParsedPayloadObj(payloadObj);
     generateSHA256(payloadStr).then(setSignHash);
-  }, [walletAddress, selectedUser, selectedAsset, quantity, customMemo, marketPrice]);
+  }, [walletAddress, selectedUser, selectedAsset, quantity, marketPrice]);
 
   const handleTonelliShanks = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +149,6 @@ export default function CryptoTool() {
     }
   }, []);
 
-  // 🔥 CORE LEDGER VALIDATION
   const availableBalance = myBalances[selectedAsset] || 0;
   const isInsufficientFunds = Number(quantity) > availableBalance;
 
@@ -189,7 +185,6 @@ export default function CryptoTool() {
       });
       setVerifyResult(response.data);
       
-      // 🔥 Instantly deduct from local state so they can't double-spend
       if (response.data.is_valid) {
         setMyBalances(prev => ({
           ...prev,
@@ -305,7 +300,6 @@ export default function CryptoTool() {
                       <div>
                         <div className="flex justify-between items-end mb-1.5">
                           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</label>
-                          {/* 🔥 LIVE BALANCE DISPLAY */}
                           <span className={`text-[10px] font-bold ${isInsufficientFunds ? 'text-red-500' : 'text-emerald-500'}`}>
                             Wallet: {availableBalance} {selectedAsset.split('-')[0]}
                           </span>
