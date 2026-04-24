@@ -206,10 +206,10 @@ export default function InvestmentTool() {
               )}
             </div>
 
-            {/* --- SECTION 2: TONELLI-SHANKS ENGINE --- */}
+            {/* --- SECTION 2: FIBONACCI ENGINE --- */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-fit">
               <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h2 className="text-lg font-bold text-slate-800">Tonelli-Shanks Engine</h2>
+                <h2 className="text-lg font-bold text-slate-800">Fibonacci Engine</h2>
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">System Ready</span>
@@ -217,13 +217,13 @@ export default function InvestmentTool() {
               </div>
               <div className="p-6">
                 <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                  Test the cryptographic proof engine's speed by simulating complex blockchain math. Choose how deep the proof should go—higher values mean a tougher challenge!
+                  Test the Fibonacci engine's speed by simulating complex proof calculations. Set the Proof Depth (Integer n) to control how far the engine computes—higher numbers mean a more challenging proof!
                 </p>
                 <form onSubmit={handleRunBenchmark} className="space-y-5 mb-8">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Proof Depth</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Proof Depth <span className=\"font-normal\">(Integer n)</span></label>
                     <input type="number" value={nValue} onChange={e => setNValue(e.target.value === '' ? '' : Number(e.target.value))} required min="1" max="50000" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none font-mono font-medium text-slate-900" placeholder="e.g. 1000"/>
-                    <span className="block text-xs text-slate-400 mt-1">How many steps deep should the proof go?</span>
+                    <span className="block text-xs text-slate-400 mt-1">Enter how many steps deep the Fibonacci proof should go (integer only).</span>
                   </div>
                   <button type="submit" disabled={algoLoading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
                     {algoLoading ? 'Running Proof Test...' : 'Run Proof Benchmark'}
@@ -233,7 +233,7 @@ export default function InvestmentTool() {
                   <div className="bg-[#0D1117] text-slate-300 rounded-xl p-6 font-mono text-sm shadow-inner overflow-hidden animate-in fade-in">
                     <div className="flex items-center gap-2 mb-4 text-xs">
                       <span className="text-emerald-400">user@cryptoquantix:~$</span>
-                      <span className="text-slate-300">./tonelli-shanks --proof-depth={algoResult.n}</span>
+                      <span className="text-slate-300">./fibonacci-engine --proof-depth={algoResult.n}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mb-6">
                       <div className="bg-[#161B22] p-4 rounded-lg border border-slate-800">
