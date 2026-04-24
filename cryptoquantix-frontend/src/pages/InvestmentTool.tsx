@@ -223,7 +223,6 @@ export default function InvestmentTool() {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Integer (n)</label>
                     <input type="number" value={nValue} onChange={e => setNValue(e.target.value === '' ? '' : Number(e.target.value))} required min="1" max="50000" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none font-mono font-medium text-slate-900" placeholder="e.g. 1000"/>
-                    <span className="block text-xs text-slate-400 mt-1">How many steps deep should the proof go?</span>
                   </div>
                   <button type="submit" disabled={algoLoading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
                     {algoLoading ? 'Running Proof Test...' : 'Run Proof Benchmark'}
