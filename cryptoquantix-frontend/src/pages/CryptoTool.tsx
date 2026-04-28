@@ -19,6 +19,7 @@ export default function CryptoTool() {
   const [tsResult, setTsResult] = useState<any>(null);
   const [tsLoading, setTsLoading] = useState(false);
   const [nValueError, setNValueError] = useState('');
+  const [tsError, setTsError] = useState('');
 
   // Validate nValue doesn't exceed 20577
   const handleNValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,11 +128,19 @@ export default function CryptoTool() {
       return;
     }
     
-    setTsResult(null); setTsLoading(true);
+    setTsResult(null); 
+    setTsError('');
+    setTsLoading(true);
     try {
       const response = await api.post('/crypto/sqrt', { n: Number(nValue), p: Number(pValue) });
       setTsResult(response.data);
-    } catch (err: any) { } finally { setTsLoading(false); }
+    } catch (err: any) { 
+      const errorMsg = err.response?.data?.error || 'Computation failed';
+      setTsError(errorMsg);
+      console.error('Tonelli-Shanks error:', errorMsg);
+    } finally { 
+      setTsLoading(false); 
+    }
   };
 
   const handleGenerateKeys = async () => {
@@ -400,18 +409,31 @@ export default function CryptoTool() {
                   <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md uppercase tracking-widest">Base Math</span>
                 </div>
                 <div className="p-6 md:p-8">
+                  {tsError && (
+                    <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-700 border border-red-200 flex items-start gap-3">
+                      <span className="mt-0.5 text-lg">⚠️</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{tsError}</p>
+                        {tsError.includes('No modular square root') && (
+                          <p className="text-xs text-red-600 mt-2 leading-relaxed">
+                            💡 <strong>Hint:</strong> Not all n and p combinations have solutions. Try <strong>n=5, p=11</strong> or <strong>n=2, p=7</strong> for valid examples.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <form onSubmit={handleTonelliShanks} className="space-y-6 mb-8">
                     <div className="grid grid-cols-2 gap-6">
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Integer (n)</label>
                         <div>
-                          <input type="number" value={nValue} onChange={handleNValueChange} required max="20577" className={`w-full px-4 py-3.5 bg-slate-50 border ${nValueError ? 'border-red-400' : 'border-slate-200'} rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 ${nValueError ? 'focus:ring-red-500' : 'focus:ring-indigo-500'} text-lg`}/>
+                          <input type="number" value={nValue} onChange={(e) => {handleNValueChange(e); setTsError('');}} required max="20577" className={`w-full px-4 py-3.5 bg-slate-50 border ${nValueError ? 'border-red-400' : 'border-slate-200'} rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 ${nValueError ? 'focus:ring-red-500' : 'focus:ring-indigo-500'} text-lg`}/>
                           {nValueError && <p className="text-xs text-red-600 mt-2 font-medium">{nValueError}</p>}
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Prime Field (p)</label>
-                        <input type="number" value={pValue} onChange={e => setPValue(Number(e.target.value))} required className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 text-lg"/>
+                        <input type="number" value={pValue} onChange={e => {setPValue(Number(e.target.value)); setTsError('');}} required className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 text-lg"/>
                       </div>
                     </div>
                     <button type="submit" disabled={tsLoading || !!nValueError} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50">
