@@ -21,6 +21,18 @@ export default function InvestmentTool() {
   const [nValue, setNValue] = useState<number | ''>(1000);
   const [algoResult, setAlgoResult] = useState<any>(null);
   const [algoLoading, setAlgoLoading] = useState(false);
+  const [nValueError, setNValueError] = useState('');
+
+  // Validate nValue doesn't exceed 20577
+  const handleNValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value === '' ? '' : Number(e.target.value);
+    setNValue(value);
+    if (typeof value === 'number' && value > 20577) {
+      setNValueError('Value cannot exceed 20577');
+    } else {
+      setNValueError('');
+    }
+  };
 
   // --- 1. Auto-Scan Market Data when Asset is Selected ---
   useEffect(() => {
@@ -86,7 +98,15 @@ export default function InvestmentTool() {
   // --- 3. Benchmark System Performance ---
   const handleRunBenchmark = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate before submission
+    if (typeof nValue === 'number' && nValue > 20577) {
+      setNValueError('Value cannot exceed 20577');
+      return;
+    }
+    
     setError('');
+    setNValueError('');
     setAlgoLoading(true);
 
     try {
@@ -222,9 +242,10 @@ export default function InvestmentTool() {
                 <form onSubmit={handleRunBenchmark} className="space-y-5 mb-8">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Integer (n)</label>
-                    <input type="number" value={nValue} onChange={e => setNValue(e.target.value === '' ? '' : Number(e.target.value))} required min="1" max="50000" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none font-mono font-medium text-slate-900" placeholder="e.g. 1000"/>
+                    <input type="number" value={nValue} onChange={handleNValueChange} required min="1" max="20577" className={`w-full px-4 py-3 bg-slate-50 border ${nValueError ? 'border-red-400' : 'border-slate-200'} rounded-xl focus:bg-white focus:ring-2 ${nValueError ? 'focus:ring-red-500' : 'focus:ring-indigo-500'} outline-none font-mono font-medium text-slate-900`} placeholder="e.g. 1000"/>
+                    {nValueError && <p className="text-sm text-red-600 mt-2 font-medium">{nValueError}</p>}
                   </div>
-                  <button type="submit" disabled={algoLoading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
+                  <button type="submit" disabled={algoLoading || !!nValueError} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
                     {algoLoading ? 'Running Proof Test...' : 'Run Proof Benchmark'}
                   </button>
                 </form>

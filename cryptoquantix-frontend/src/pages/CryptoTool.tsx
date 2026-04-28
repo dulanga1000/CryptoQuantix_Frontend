@@ -18,6 +18,18 @@ export default function CryptoTool() {
   const [pValue, setPValue] = useState<number | ''>(13);
   const [tsResult, setTsResult] = useState<any>(null);
   const [tsLoading, setTsLoading] = useState(false);
+  const [nValueError, setNValueError] = useState('');
+
+  // Validate nValue doesn't exceed 20577
+  const handleNValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value === '' ? '' : Number(e.target.value);
+    setNValue(value);
+    if (typeof value === 'number' && value > 20577) {
+      setNValueError('Value cannot exceed 20577');
+    } else {
+      setNValueError('');
+    }
+  };
 
   const [networkUsers, setNetworkUsers] = useState<any[]>([]);
   const [marketPrice, setMarketPrice] = useState<number>(0);
@@ -108,6 +120,13 @@ export default function CryptoTool() {
 
   const handleTonelliShanks = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate before submission
+    if (typeof nValue === 'number' && nValue > 20577) {
+      setNValueError('Value cannot exceed 20577');
+      return;
+    }
+    
     setTsResult(null); setTsLoading(true);
     try {
       const response = await api.post('/crypto/sqrt', { n: Number(nValue), p: Number(pValue) });
@@ -385,14 +404,17 @@ export default function CryptoTool() {
                     <div className="grid grid-cols-2 gap-6">
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Integer (n)</label>
-                        <input type="number" value={nValue} onChange={e => setNValue(Number(e.target.value))} required className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 text-lg"/>
+                        <div>
+                          <input type="number" value={nValue} onChange={handleNValueChange} required max="20577" className={`w-full px-4 py-3.5 bg-slate-50 border ${nValueError ? 'border-red-400' : 'border-slate-200'} rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 ${nValueError ? 'focus:ring-red-500' : 'focus:ring-indigo-500'} text-lg`}/>
+                          {nValueError && <p className="text-xs text-red-600 mt-2 font-medium">{nValueError}</p>}
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Prime Field (p)</label>
                         <input type="number" value={pValue} onChange={e => setPValue(Number(e.target.value))} required className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 text-lg"/>
                       </div>
                     </div>
-                    <button type="submit" disabled={tsLoading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50">
+                    <button type="submit" disabled={tsLoading || !!nValueError} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50">
                       {tsLoading ? 'Computing Roots...' : 'Execute Algorithm'}
                     </button>
                   </form>
