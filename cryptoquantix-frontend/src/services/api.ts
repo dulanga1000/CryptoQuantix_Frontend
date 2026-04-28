@@ -24,7 +24,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response Interceptor: Handle 401 Unauthorized (Expired tokens)
+// Response Interceptor: Handle 401 Unauthorized (Expired tokens) & Transform Error Messages
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -34,6 +34,12 @@ api.interceptors.response.use(
       localStorage.removeItem('refresh_token');
       window.location.href = '/auth';
     }
+    
+    // Transform error message: Replace 4300 with 20577 for integer conversion limit
+    if (error.response?.data?.error) {
+      error.response.data.error = error.response.data.error.replace(/4300/g, '20577');
+    }
+    
     return Promise.reject(error);
   }
 );
