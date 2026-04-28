@@ -12,6 +12,25 @@ const generateSHA256 = async (text: string) => {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
+// Legendre symbol: checks if n is a quadratic residue modulo p
+// If result is 1, then n has a square root modulo p (valid)
+// If result is -1 or p-1, then n does NOT have a square root modulo p (invalid)
+const legendreSymbol = (n: number, p: number): number => {
+  const result = Math.pow(n % p, (p - 1) / 2) % p;
+  return result === p - 1 ? -1 : result;
+};
+
+// Helper: Get suggested valid values for a given prime p
+const getSuggestedValues = (p: number): number[] => {
+  const suggestions: number[] = [];
+  for (let i = 1; i < Math.min(p, 20) && suggestions.length < 3; i++) {
+    if (legendreSymbol(i, p) === 1) {
+      suggestions.push(i);
+    }
+  }
+  return suggestions;
+};
+
 export default function CryptoTool() {
   const [activeTab, setActiveTab] = useState<'simulator' | 'math'>('simulator');
   const [nValue, setNValue] = useState<number | ''>(10);
@@ -19,17 +38,56 @@ export default function CryptoTool() {
   const [tsResult, setTsResult] = useState<any>(null);
   const [tsLoading, setTsLoading] = useState(false);
   const [nValueError, setNValueError] = useState('');
+  const [pValueError, setPValueError] = useState('');
   const [tsError, setTsError] = useState('');
+  const [suggestedValues, setSuggestedValues] = useState<number[]>([]);
 
-  // Validate nValue doesn't exceed 20577
+  // Validate both n and p values
+  const validateValues = (n: number | '', p: number | '') => {
+    let nError = '';
+    let pError = '';
+    let suggestions: number[] = [];
+
+    // Validate n
+    if (typeof n === 'number') {
+      if (n <= 0) nError = 'n must be positive';
+      else if (n > 20577) nError = 'n cannot exceed 20577';
+      else if (!Number.isInteger(n)) nError = 'n must be an integer';
+    }
+
+    // Validate p (must be prime - simple check)
+    if (typeof p === 'number') {
+      if (p <= 2) pError = 'p must be greater than 2';
+      else if (!Number.isInteger(p)) pError = 'p must be an integer';
+      else if (p % 2 === 0 && p !== 2) pError = 'p should be an odd prime';
+    }
+
+    // Check if n is a quadratic residue modulo p
+    if (typeof n === 'number' && typeof p === 'number' && !nError && !pError) {
+      if (p > 2 && legendreSymbol(n, p) !== 1) {
+        suggestions = getSuggestedValues(p);
+        nError = `n=${n} has no square root modulo p=${p}`;
+      }
+    }
+
+    setNValueError(nError);
+    setPValueError(pError);
+    setSuggestedValues(suggestions);
+  };
+
+  // Validate nValue doesn't exceed 20577 and is a valid quadratic residue
   const handleNValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value === '' ? '' : Number(e.target.value);
     setNValue(value);
-    if (typeof value === 'number' && value > 20577) {
-      setNValueError('Value cannot exceed 20577');
-    } else {
-      setNValueError('');
-    }
+    setTsError('');
+    validateValues(value, pValue);
+  };
+
+  const handlePValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value === '' ? '' : Number(e.target.value);
+    setPValue(value);
+    setTsError('');
+    validateValues(nValue, value);
   };
 
   const [networkUsers, setNetworkUsers] = useState<any[]>([]);
@@ -122,9 +180,9 @@ export default function CryptoTool() {
   const handleTonelliShanks = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate before submission
-    if (typeof nValue === 'number' && nValue > 20577) {
-      setNValueError('Value cannot exceed 20577');
+    // Final validation check
+    validateValues(nValue, pValue);
+    if (nValueError || pValueError) {
       return;
     }
     
@@ -409,15 +467,33 @@ export default function CryptoTool() {
                   <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md uppercase tracking-widest">Base Math</span>
                 </div>
                 <div className="p-6 md:p-8">
-                  {tsError && (
+                  {(nValueError || pValueError || tsError) && (
                     <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-700 border border-red-200 flex items-start gap-3">
                       <span className="mt-0.5 text-lg">⚠️</span>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{tsError}</p>
-                        {tsError.includes('No modular square root') && (
-                          <p className="text-xs text-red-600 mt-2 leading-relaxed">
-                            💡 <strong>Hint:</strong> Not all n and p combinations have solutions. Try <strong>n=5, p=11</strong> or <strong>n=2, p=7</strong> for valid examples.
-                          </p>
+                        {nValueError && <p className="text-sm font-medium">{nValueError}</p>}
+                        {pValueError && <p className="text-sm font-medium">{pValueError}</p>}
+                        {tsError && <p className="text-sm font-medium">{tsError}</p>}
+                        
+                        {suggestedValues.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-red-300">
+                            <p className="text-xs font-bold mb-2">💡 <strong>Valid n values for p={pValue}:</strong></p>
+                            <div className="flex flex-wrap gap-2">
+                              {suggestedValues.map((val) => (
+                                <button
+                                  key={val}
+                                  type="button"
+                                  onClick={() => {
+                                    setNValue(val);
+                                    validateValues(val, pValue);
+                                  }}
+                                  className="text-xs bg-red-200 hover:bg-red-300 text-red-800 px-3 py-1 rounded-md font-semibold transition-colors"
+                                >
+                                  n={val}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -427,16 +503,36 @@ export default function CryptoTool() {
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Integer (n)</label>
                         <div>
-                          <input type="number" value={nValue} onChange={(e) => {handleNValueChange(e); setTsError('');}} required max="20577" className={`w-full px-4 py-3.5 bg-slate-50 border ${nValueError ? 'border-red-400' : 'border-slate-200'} rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 ${nValueError ? 'focus:ring-red-500' : 'focus:ring-indigo-500'} text-lg`}/>
-                          {nValueError && <p className="text-xs text-red-600 mt-2 font-medium">{nValueError}</p>}
+                          <input 
+                            type="number" 
+                            value={nValue} 
+                            onChange={handleNValueChange} 
+                            required 
+                            max="20577" 
+                            className={`w-full px-4 py-3.5 bg-slate-50 border ${nValueError ? 'border-red-400 bg-red-50' : 'border-slate-200'} rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 ${nValueError ? 'focus:ring-red-500' : 'focus:ring-indigo-500'} text-lg`}
+                            placeholder="e.g., 5"
+                          />
+                          {nValueError && <p className="text-xs text-red-600 mt-1 font-medium">✗ {nValueError}</p>}
+                          {!nValueError && typeof nValue === 'number' && <p className="text-xs text-emerald-600 mt-1 font-medium">✓ Valid</p>}
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Prime Field (p)</label>
-                        <input type="number" value={pValue} onChange={e => {setPValue(Number(e.target.value)); setTsError('');}} required className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 text-lg"/>
+                        <div>
+                          <input 
+                            type="number" 
+                            value={pValue} 
+                            onChange={handlePValueChange} 
+                            required 
+                            className={`w-full px-4 py-3.5 bg-slate-50 border ${pValueError ? 'border-red-400 bg-red-50' : 'border-slate-200'} rounded-xl outline-none font-mono font-bold text-slate-900 focus:ring-2 ${pValueError ? 'focus:ring-red-500' : 'focus:ring-indigo-500'} text-lg`}
+                            placeholder="e.g., 11"
+                          />
+                          {pValueError && <p className="text-xs text-red-600 mt-1 font-medium">✗ {pValueError}</p>}
+                          {!pValueError && typeof pValue === 'number' && <p className="text-xs text-emerald-600 mt-1 font-medium">✓ Valid</p>}
+                        </div>
                       </div>
                     </div>
-                    <button type="submit" disabled={tsLoading || !!nValueError} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50">
+                    <button type="submit" disabled={tsLoading || !!nValueError || !!pValueError} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                       {tsLoading ? 'Computing Roots...' : 'Execute Algorithm'}
                     </button>
                   </form>
